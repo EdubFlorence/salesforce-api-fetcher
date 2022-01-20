@@ -16,3 +16,5 @@ Followed [this](https://blog.deadlypenguin.com/2019/03/08/jwt-bearer-auth-salesf
 which deals primarily with [this](https://github.com/pcon/SalesforceApps/tree/master/sso_example) token login
 
 [forked](https://github.com/EdubFlorence/SalesforceApps) the repo
+
+[salesforce api docs](https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/resources_sobject_describe.htm)
