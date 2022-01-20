@@ -1,15 +1,9 @@
 var axios = require('axios');
 var jsforce = require('jsforce');
-var querystring = require('querystring');
 
 const token = require('./token.js');
 
-var params = {
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion: token.token
-};
-
-axios.post(token.token_url, querystring.stringify(params))
+axios.post(token.token_url, token.queryString)
     .then(function (res) {
 
         var conn = new jsforce.Connection({
