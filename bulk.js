@@ -29,6 +29,7 @@ axios.post(token.token_url, token.queryString)
             from ${type}`;
         var fileName = `${OUTPUT_DIR}${type}-results.json`;
 
+        // https://jsforce.github.io/document/#bulk-query
         conn.bulk.query(query)
             .stream().pipe(fs.createWriteStream(fileName));
     });
