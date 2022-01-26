@@ -17,6 +17,12 @@ axios.post(token.token_url, token.queryString)
             accessToken: res.data.access_token
         });
 
+        var derp = conn.limitInfo?.apiUsage?.limit;
+        
+        if(conn.limitInfo?.apiUsage?.limit !== undefined) console.log("API Limit: " + conn.limitInfo.apiUsage.limit);
+        if(conn.limitInfo?.apiUsage?.used !== undefined) console.log("API Limit: " + conn.limitInfo.apiUsage.used);
+        else console.log("API limit info empty.");
+
         // just the values of our enum:
         // Object.values(enums).join(",")
 
@@ -28,15 +34,23 @@ axios.post(token.token_url, token.queryString)
             Site_Number__c, Site_Account_Record_ID__c, 
             Country__c,
             Site_Study_Parent_Account_ID__c,
-            Master_study__c
-            from ${type} limit ${limit}`;
+            Master_study__c,
+            Protocol__c
+            from ${type}
+            limit ${limit}`;
 
         conn.query(query, function (err, results) {
+            // "/services/data/v42.0/query/01g1K00006VJSo4QAH-2000"
+            // results.nextRecordsUrl
             if(err) console.error(err);
             // console.log(JSON.stringify(results.records[0])); // eslint-disable-line no-console
             // We may want to "reverse lookup" our enums to put the salesforce _label_ on the result, instead of the sf field _name_
             console.log(`Writing to ${OUTPUT_DIR}results.json`);
             fs.writeFileSync(`${OUTPUT_DIR}results.json`, JSON.stringify(results.records));
+
+            if(results.nextRecordsUrl) {
+                // conn.queryAll
+            }
         });
     });
 

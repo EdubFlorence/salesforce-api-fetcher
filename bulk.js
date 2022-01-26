@@ -16,18 +16,20 @@ axios.post(token.token_url, token.queryString)
             instanceUrl: res.data.instance_url,
             accessToken: res.data.access_token
         });
-
-        console.log("SF API Limit: " + conn.limitInfo.apiUsage.limit);
-        console.log("SF API Used: " + conn.limitInfo.apiUsage.used);
+        
+        if(conn.limitInfo?.apiUsage?.limit !== undefined) console.log("API Limit: " + conn.limitInfo.apiUsage.limit);
+        if(conn.limitInfo?.apiUsage?.used !== undefined) console.log("API Limit: " + conn.limitInfo.apiUsage.used);
+        else console.log("API limit info empty.");
 
         var type = "Site_Study__c";
         var query = `select ${enums.SITE_STUDY_ID}, Name, Site_Name_from_ID__c, ${enums.PROGRESS}, 
             Site_Number__c, Site_Account_Record_ID__c, 
             Country__c,
             Site_Study_Parent_Account_ID__c,
-            Master_study__c
+            Master_study__c,
+            Protocol__c
             from ${type}`;
-        var fileName = `${OUTPUT_DIR}${type}-results.json`;
+        var fileName = `${OUTPUT_DIR}${type}-results.csv`;
 
         // https://jsforce.github.io/document/#bulk-query
         conn.bulk.query(query)
