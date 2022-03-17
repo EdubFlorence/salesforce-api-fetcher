@@ -1,8 +1,12 @@
 var axios = require('axios');
 var jsforce = require('jsforce');
 var fs = require('fs');
+const { stringify: CsvStringify } = require('csv-stringify/sync');
 
 const token = require('./token.js');
+
+// Run `node describe.js` first
+const columnNameMap = require('./output/Site_Study__c.json');
 
 const OUTPUT_DIR = "output/";
 if (!fs.existsSync(OUTPUT_DIR)){
@@ -23,36 +27,80 @@ axios.post(token.token_url, token.queryString)
         if(conn.limitInfo?.apiUsage?.used !== undefined) console.log("API Limit: " + conn.limitInfo.apiUsage.used);
         else console.log("API limit info empty.");
 
-        // just the values of our enum:
-        // Object.values(enums).join(",")
-
-        // Study (ID), and Site (ID)
-        // sponsor id
         var type = "Site_Study__c";
-        var limit = 15;
-        var query = `select ${enums.SITE_STUDY_ID}, Name, Site_Name_from_ID__c, ${enums.PROGRESS}, 
-            Site_Number__c, Site_Account_Record_ID__c, 
+        var query = `select
+            ID18__c,
+            Protocol__c,
+            ${enums.TEAM_NAME},
+            Site_Number__c,
+            Name,
+            Site_Account_Record_ID__c,
             Country__c,
             Site_Study_Parent_Account_ID__c,
-            Master_study__c,
-            Protocol__c
+            Site_Account__c,
+            Planned_SIV_Date__c,
+            CreatedDate,
+            Stage__c,
+            Site_Account_Status__c,
+            Standard_Checklist_Progress__c,
+            SiteStudy_Parent_Account__c
             from ${type}
-            limit ${limit}`;
+        `;
 
-        conn.query(query, function (err, results) {
+        conn.queryAll(query, function (err, results) {
             // "/services/data/v42.0/query/01g1K00006VJSo4QAH-2000"
             // results.nextRecordsUrl
             if(err) console.error(err);
             // console.log(JSON.stringify(results.records[0])); // eslint-disable-line no-console
             // We may want to "reverse lookup" our enums to put the salesforce _label_ on the result, instead of the sf field _name_
-            console.log(`Writing to ${OUTPUT_DIR}results.json`);
-            fs.writeFileSync(`${OUTPUT_DIR}results.json`, JSON.stringify(results.records));
 
-            if(results.nextRecordsUrl) {
-                // conn.queryAll
+            const remappedRecords = remapColumnNames(results.records);
+            const allRecords = [...remappedRecords];
+
+            if (results.nextRecordsUrl) {
+                queryMore(conn, results.nextRecordsUrl, allRecords);
+            } else {
+                saveCsv(allRecords);
             }
         });
     });
+
+function remapColumnNames(records) {
+    return records.map((record) => {
+        return Object.keys(record).reduce((acc, key) => {
+            if (key === 'attributes') return acc;
+
+            if (key === 'Protocol__c') {
+                acc['Master Study Protocol Number'] = record[key];
+                return acc;
+            }
+
+            const friendlyKey = columnNameMap[key];
+            acc[friendlyKey] = record[key];
+            return acc;
+        }, {});
+    });
+}
+
+function saveCsv(records) {
+    const csv = CsvStringify(records, { header: true });
+    fs.writeFileSync(`${OUTPUT_DIR}results.csv`, csv);
+}
+
+function queryMore(conn, locator, allRecords) {
+    conn.queryMore(locator, function (err, results) {
+        if (err) console.error(err);
+
+        const remappedRecords = remapColumnNames(results.records);
+        allRecords.push(...remappedRecords);
+
+        if (results.nextRecordsUrl) {
+            queryMore(conn, results.nextRecordsUrl, allRecords);
+        } else {
+            saveCsv(allRecords);
+        }
+    });
+}
 
 const enums = {
     SITE_STUDY_ID: "ID",
