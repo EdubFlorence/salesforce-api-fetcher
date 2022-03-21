@@ -107,7 +107,7 @@ function joinTables(studyList, studySiteList) {
 
         return {
             ...studySite,
-            'Master Study: Status':  studyData['Stage__c']
+            'Master Study Status':  studyData['Stage__c']
         }
     });
 
@@ -117,7 +117,8 @@ function joinTables(studyList, studySiteList) {
 function remapColumnNames(records) {
     return records.map((record) => {
         return {
-            'Master Study: Protocol #': record['Protocol__c'],
+            // Don't include colons in the mapped names
+            'Master Study Protocol Number': record['Protocol__c'],
             'Postman DE or PROD': record['Postman_DE_or_PROD__c'],
             'Team Name': record['Team_Name__c'],
             'Site Admin Email Domain': record['Site_Admin_Email_Domain__c'],
@@ -127,22 +128,23 @@ function remapColumnNames(records) {
             'Site Account Record ID': record['Site_Account_Record_ID__c'],
             'Country': record['Country__c'],
             'Site Study Parent Account ID': record['Site_Study_Parent_Account_ID__c'],
-            'Site Account: Account Name': record['Site_Name__c'],
-            'Site Admin: Full Name': `${record['Site_Admin_First__c'] || ''} ${record['Site_Admin_Last__c'] || ''}`.trim(),
+            'Site Account Account Name': record['Site_Name__c'],
+            'Site Admin Full Name': `${record['Site_Admin_First__c'] || ''} ${record['Site_Admin_Last__c'] || ''}`.trim(),
             'Site Admin Email': record['Site_Admin_Email__c'],
             'Planned SIV Date': record['Planned_SIV_Date__c'],
             'Created Date': record['CreatedDate'],
             'Study Site ID': record['ID18__c'],
             'Stage': record['Stage__c'],
-            'Master Study: Status': record['Master Study: Status'], // joined
+            'Master Study Status': record['Master Study Status'], // joined
             'Site Study Parent Account': record['SiteStudy_Parent_Account__c']
         }
     });
 }
 
+const epochMillis = new Date().valueOf();
 function saveCsv(records, organization) {
     const csv = CsvStringify(records, { header: true });
-    fs.writeFileSync(`${OUTPUT_DIR}sfdc-extract-PROD-${organization}.csv`, csv);
+    fs.writeFileSync(`${OUTPUT_DIR}sfdc-extract-PROD-${organization}-${epochMillis}.csv`, csv);
 }
 
 (async () => {
